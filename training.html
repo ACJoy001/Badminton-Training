@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmashPrep — Undercover Badminton Training</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body style="margin:0;">
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useCallback } = React;
+
+/* ----------------------------- ICONS (hand-drawn, no external icon package) ----------------------------- */
+
+function Icon({ size = 16, children }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      {children}
+    </svg>
+  );
+}
+const Dumbbell = (p) => <Icon {...p}><rect x="2" y="9" width="3" height="6" rx="1" /><rect x="19" y="9" width="3" height="6" rx="1" /><line x1="6" y1="12" x2="18" y2="12" /><rect x="6" y="7" width="2" height="10" rx="1" /><rect x="16" y="7" width="2" height="10" rx="1" /></Icon>;
+const Library = (p) => <Icon {...p}><rect x="3" y="3" width="4" height="18" rx="1" /><rect x="10" y="6" width="4" height="15" rx="1" /><rect x="17" y="9" width="4" height="12" rx="1" /></Icon>;
+const Calendar = (p) => <Icon {...p}><rect x="3" y="4" width="18" height="17" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="7" y1="2" x2="7" y2="6" /><line x1="17" y1="2" x2="17" y2="6" /></Icon>;
+const TrendingUp = (p) => <Icon {...p}><polyline points="3,17 9,11 13,15 21,6" /><polyline points="14,6 21,6 21,13" /></Icon>;
+const CheckCircle2 = (p) => <Icon {...p}><circle cx="12" cy="12" r="9" /><polyline points="8,12 11,15 16,9" /></Icon>;
+const SettingsIcon = (p) => <Icon {...p}><circle cx="12" cy="12" r="3" /><path d="M12 1v4M12 19v4M4.2 4.2l2.8 2.8M17 17l2.8 2.8M1 12h4M19 12h4M4.2 19.8l2.8-2.8M17 7l2.8-2.8" /></Icon>;
+const X = (p) => <Icon {...p}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></Icon>;
+const ChevronLeft = (p) => <Icon {...p}><polyline points="15,18 9,12 15,6" /></Icon>;
+const ChevronRight = (p) => <Icon {...p}><polyline points="9,18 15,12 9,6" /></Icon>;
+const Flame = (p) => <Icon {...p}><path d="M12 2c-1 3-4 4-4 8a4 4 0 0 0 8 0c0-1-.5-2-1-3 1 0 2 1 2 3a5 5 0 0 1-10 0c0-5 3-6 5-8z" /></Icon>;
+const RotateCcw = (p) => <Icon {...p}><path d="M3 12a9 9 0 1 0 3-6.7" /><polyline points="3,3 3,9 9,9" /></Icon>;
+
+/* ----------------------------- DATA ----------------------------- */
+
+const CATEGORIES = [
+  { id: "footwork", label: "Footwork", short: "Move", color: "#E4FF6B" },
+  { id: "power", label: "Smash Power", short: "Power", color: "#FF5C4D" },
+  { id: "mobility", label: "Shoulder Mobility", short: "Mobility", color: "#7FD8C4" },
+  { id: "core", label: "Core & Rotation", short: "Core", color: "#F4F7F1" },
+];
+
+const EQUIPMENT = [
+  { id: "bodyweight", label: "Bodyweight" },
+  { id: "bands", label: "Resistance Band" },
+  { id: "dumbbells", label: "Dumbbells" },
+  { id: "kettlebell", label: "Kettlebell" },
+  { id: "barbell", label: "Barbell" },
+];
+
+const EXERCISES = [
+  // FOOTWORK
+  { id: "fw01", name: "Split-Step Bounce", category: "footwork", equipment: ["bodyweight"], pattern: "splitstep", difficulty: "Beginner", cue: "Stay light on the balls of your feet. Small hop, land soft with knees bent, ready to explode either direction.", sets: 4, reps: "20 sec", rest: 30, video: "oJp_2oT4HpY" },
+  { id: "fw02", name: "Side-to-Side Shuffle", category: "footwork", equipment: ["bodyweight"], pattern: "shuffle", difficulty: "Beginner", cue: "Push off the outside foot, don't let your feet cross. Keep hips low like you're covering the tramlines.", sets: 4, reps: "30 sec", rest: 30, video: "FnDgOm3wfJc" },
+  { id: "fw03", name: "Forward Lunge to Net", category: "footwork", equipment: ["bodyweight"], pattern: "lunge", difficulty: "Beginner", cue: "Big final step, back knee stays off the floor. This is your net-shot lunge — drive back to center after.", sets: 3, reps: "10 each leg", rest: 45, video: "7GJu7ZCXKkg" },
+  { id: "fw04", name: "Lateral Lunge (Side Court)", category: "footwork", equipment: ["bodyweight"], pattern: "lungeSide", difficulty: "Intermediate", cue: "Sit back into the hip, chest up. This mirrors reaching wide for a side-court clear.", sets: 3, reps: "10 each side", rest: 45, video: "gwWv7aPcD88" },
+  { id: "fw05", name: "Cross-Step Recovery", category: "footwork", equipment: ["bodyweight"], pattern: "shuffle", difficulty: "Intermediate", cue: "Cross one foot behind the other, then snap back to base position. Builds the recovery step after a stretch shot.", sets: 4, reps: "8 each side", rest: 30, video: "FnDgOm3wfJc" },
+  { id: "fw06", name: "Back-Corner Chasse", category: "footwork", equipment: ["bodyweight"], pattern: "shuffle", difficulty: "Intermediate", cue: "Chasse step diagonally back, as if retreating for an overhead clear, then sprint back to center.", sets: 4, reps: "6 each side", rest: 45, video: "FnDgOm3wfJc" },
+  { id: "fw07", name: "Rear Split Lunge with Reach", category: "footwork", equipment: ["dumbbells"], pattern: "lunge", difficulty: "Advanced", cue: "Add a light dumbbell reach overhead as you lunge back, simulating a rear-court defensive stretch.", sets: 3, reps: "8 each leg", rest: 45, video: "oT1VDVUjGxY" },
+
+  // SMASH POWER
+  { id: "pw01", name: "Overhead Band Smash Pull", category: "power", equipment: ["bands"], pattern: "swing", difficulty: "Intermediate", cue: "Anchor the band low behind you, pull up and over like your smash swing. Snap the wrist through at the end.", sets: 4, reps: "12", rest: 45, video: "zTSPbF4LSZw" },
+  { id: "pw02", name: "Standing Shoulder Press", category: "power", equipment: ["dumbbells"], pattern: "press", difficulty: "Beginner", cue: "Press straight up, don't flare elbows too wide. Builds the raw strength behind your overhead swing.", sets: 4, reps: "10", rest: 60, video: "bmy7tIopNt4" },
+  { id: "pw03", name: "Explosive Push-Up", category: "power", equipment: ["bodyweight"], pattern: "press", difficulty: "Advanced", cue: "Lower under control, drive up fast enough hands leave the floor. Transfers directly to swing speed.", sets: 3, reps: "6-8", rest: 60, video: "GR0ZL7f7u18" },
+  { id: "pw04", name: "Band Resisted Arm Snap", category: "power", equipment: ["bands"], pattern: "swing", difficulty: "Intermediate", cue: "Isolate the forearm snap at the top of the swing — this is where smash power actually comes from.", sets: 4, reps: "15", rest: 30, video: "95qOHjH67oI" },
+  { id: "pw05", name: "Kettlebell Swing (Hip Drive)", category: "power", equipment: ["kettlebell"], pattern: "swing", difficulty: "Intermediate", cue: "Power comes from the hips snapping forward, not the arms. Same hip-drive that powers a jump smash.", sets: 4, reps: "12", rest: 60, video: "kuZPzr_eldA" },
+  { id: "pw06", name: "Single-Arm Overhead Tricep Extension", category: "power", equipment: ["dumbbells"], pattern: "press", difficulty: "Beginner", cue: "Elbow stays fixed near your ear. Tricep strength is what finishes your smash at full extension.", sets: 3, reps: "10 each arm", rest: 45, video: "q40YfGtsNaU" },
+  { id: "pw07", name: "Wrist Flick Snaps (Band)", category: "power", equipment: ["bands"], pattern: "pull", difficulty: "Beginner", cue: "Small, fast flicks of the wrist against band tension. Directly trains racket-head speed.", sets: 4, reps: "20", rest: 30, video: "Z64A_Q2aG3U" },
+  { id: "pw08", name: "Landmine-Style Overhead Throw", category: "power", equipment: ["barbell"], pattern: "press", difficulty: "Advanced", cue: "One end of an empty or lightly loaded barbell anchored in a corner — drive it overhead explosively.", sets: 3, reps: "8", rest: 60, video: "J2M-trq1L9A" },
+
+  // MOBILITY
+  { id: "mb01", name: "Band Pull-Apart", category: "mobility", equipment: ["bands"], pattern: "pull", difficulty: "Beginner", cue: "Arms straight, pull the band to your chest by squeezing shoulder blades together. Keeps shoulders healthy under smash load.", sets: 3, reps: "15", rest: 30, video: "tzYip9kdVUU" },
+  { id: "mb02", name: "Shoulder Dislocates", category: "mobility", equipment: ["bands"], pattern: "pull", difficulty: "Beginner", cue: "Wide grip, rotate the band from front to back over your head without bending elbows. Go slow.", sets: 2, reps: "10", rest: 30, video: "riVxa9By-pM" },
+  { id: "mb03", name: "Wall Slides", category: "mobility", equipment: ["bodyweight"], pattern: "raise", difficulty: "Beginner", cue: "Back flat on the wall, slide arms up and down keeping contact. Opens up overhead reach for clears.", sets: 3, reps: "10", rest: 30, video: "GaP20t6ZOfU" },
+  { id: "mb04", name: "Scapular Push-Up", category: "mobility", equipment: ["bodyweight"], pattern: "press", difficulty: "Beginner", cue: "Arms stay straight, just protract and retract the shoulder blades. Small movement, big stability payoff.", sets: 3, reps: "12", rest: 30, video: "MtNsnW7Q7Fo" },
+  { id: "mb05", name: "External Rotation (Band)", category: "mobility", equipment: ["bands"], pattern: "pull", difficulty: "Beginner", cue: "Elbow pinned to your side, rotate forearm outward against the band. Protects the rotator cuff from smash overuse.", sets: 3, reps: "12 each arm", rest: 30, video: "ybNV36DoRfY" },
+  { id: "mb06", name: "Arm Circles Dynamic", category: "mobility", equipment: ["bodyweight"], pattern: "raise", difficulty: "Beginner", cue: "Big, controlled circles, both directions. Good warm-up before any power work.", sets: 2, reps: "15 each way", rest: 15, video: "P3dzI9opLGE" },
+
+  // CORE
+  { id: "cr01", name: "Russian Twist (Kettlebell)", category: "core", equipment: ["kettlebell"], pattern: "twist", difficulty: "Intermediate", cue: "Rotate from the torso, not just the arms. This rotation is what whips your racket through the smash.", sets: 3, reps: "16 total", rest: 45, video: "PkGPokybYaU" },
+  { id: "cr02", name: "Band Rotational Chop", category: "core", equipment: ["bands"], pattern: "twist", difficulty: "Intermediate", cue: "Anchor the band to the side, chop diagonally across your body. Mimics the core rotation behind a smash.", sets: 3, reps: "10 each side", rest: 45, video: "d7XYZYxQuVM" },
+  { id: "cr03", name: "Standing Woodchopper (Dumbbell)", category: "core", equipment: ["dumbbells"], pattern: "twist", difficulty: "Intermediate", cue: "Pivot the back foot as you rotate, power starts from the ground up, same as your smash.", sets: 3, reps: "10 each side", rest: 45, video: "Rf-2l8Z40dg" },
+  { id: "cr04", name: "Plank Hold", category: "core", equipment: ["bodyweight"], pattern: "plank", difficulty: "Beginner", cue: "Straight line from head to heels, ribs pulled down. A stable core keeps your smash accurate.", sets: 3, reps: "40 sec", rest: 30, video: "A2b2EmIg0dA" },
+  { id: "cr05", name: "Side Plank Reach-Under", category: "core", equipment: ["bodyweight"], pattern: "twist", difficulty: "Intermediate", cue: "From side plank, thread your top arm underneath your torso then back to the sky. Controlled rotation under load.", sets: 3, reps: "8 each side", rest: 30, video: "ToAW0S6xQzk" },
+  { id: "cr06", name: "Hanging Knee Raise", category: "core", equipment: ["bodyweight"], pattern: "raise", difficulty: "Advanced", cue: "Needs a pull-up bar. Curl the knees up without swinging — builds the core control for jump smashes.", sets: 3, reps: "10", rest: 45, video: "p9hhX_Sx5v0" },
+  { id: "cr07", name: "Superman Back Extension", category: "core", equipment: ["bodyweight"], pattern: "plank", difficulty: "Beginner", cue: "Lift chest and legs together, squeeze for a second at the top. Balances out all the forward-flexed core work.", sets: 3, reps: "12", rest: 30, video: "UXUGfiNL1lI" },
+];
+
+const WEEK_MULTIPLIERS = [
+  { label: "Week 1", tag: "Base", setsAdd: 0, note: "Learn the movement, focus on clean form." },
+  { label: "Week 2", tag: "Volume", setsAdd: 0, note: "Same weight, more reps. Build work capacity." },
+  { label: "Week 3", tag: "Build", setsAdd: 1, note: "Add a set. Push effort a little closer to max." },
+  { label: "Week 4", tag: "Peak", setsAdd: 1, note: "Heaviest week. Then deload and repeat the cycle." },
+];
+
+function bumpReps(reps, weekIdx) {
+  const m = /^(\d+)(.*)$/.exec(reps.trim());
+  if (!m) return reps;
+  const base = parseInt(m[1], 10);
+  const suffix = m[2];
+  const add = [0, 2, 2, 4][weekIdx] || 0;
+  if (reps.includes("sec")) return `${base + add}${suffix}`;
+  return `${base + add}${suffix}`;
+}
+
+/* ----------------------------- STORAGE ----------------------------- */
+
+const SETTINGS_KEY = "undercover-smashprep-settings";
+const LOGS_KEY = "undercover-smashprep-progress-logs";
+
+function loadJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+function saveJSON(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.error("storage save failed", e);
+  }
+}
+
+/* ----------------------------- PLAN BUILDING ----------------------------- */
+
+function buildDayGroups(daysPerWeek) {
+  const days = Array.from({ length: daysPerWeek }, () => []);
+  CATEGORIES.forEach((cat, catIdx) => {
+    const list = EXERCISES.filter((e) => e.category === cat.id);
+    list.forEach((ex, i) => {
+      const dayIdx = (i + catIdx) % daysPerWeek;
+      days[dayIdx].push(ex);
+    });
+  });
+  return days;
+}
+
+/* ----------------------------- EXERCISE DEMO (SVG) ----------------------------- */
+
+const ANIMATION_PARTS = {
+  splitstep: { legs: "anim-splitstep-legs", torso: "anim-splitstep-torso" },
+  shuffle: { legs: "anim-shuffle-legs", torso: "anim-shuffle-torso" },
+  lunge: { legs: "anim-lunge-legs", torso: "anim-lunge-torso" },
+  lungeSide: { legs: "anim-lungeside-legs", torso: "anim-lungeside-torso" },
+  swing: { armR: "anim-swing-arm", torso: "anim-swing-torso" },
+  press: { armR: "anim-press-arm-r", armL: "anim-press-arm-l" },
+  pull: { armR: "anim-pull-arm-r", armL: "anim-pull-arm-l" },
+  twist: { torso: "anim-twist-torso" },
+  raise: { armR: "anim-raise-arm-r", armL: "anim-raise-arm-l" },
+  plank: { torso: "anim-plank-pulse" },
+};
+
+const SKIN = "#E8B48A";
+const HAIR = "#2B2118";
+const PANTS = "#173226";
+const SHOE = "#E4FF6B";
+
+function ExerciseDemo({ pattern, accent = "#E4FF6B" }) {
+  const anim = ANIMATION_PARTS[pattern] || {};
+  const hasRacket = pattern === "swing" || pattern === "press";
+  return (
+    <svg viewBox="0 0 200 200" className="demo-svg" role="img" aria-label={`${pattern} animation`}>
+      <line x1="20" y1="180" x2="180" y2="180" className="court-line" />
+      <line x1="100" y1="180" x2="100" y2="60" className="court-line-faint" />
+      <ellipse cx="100" cy="184" rx="34" ry="6" className="fig-shadow" />
+
+      {/* legs + shoes, animate together */}
+      <g className={anim.legs} style={{ transformOrigin: "100px 118px" }}>
+        <line x1="100" y1="118" x2="80" y2="176" stroke={PANTS} strokeWidth="18" strokeLinecap="round" />
+        <line x1="100" y1="118" x2="120" y2="176" stroke={PANTS} strokeWidth="18" strokeLinecap="round" />
+        <ellipse cx="78" cy="180" rx="11" ry="6" fill={SHOE} />
+        <ellipse cx="122" cy="180" rx="11" ry="6" fill={SHOE} />
+      </g>
+
+      {/* torso, arms, head all move together as upper body */}
+      <g className={anim.torso}>
+        {/* shirt */}
+        <rect x="82" y="48" width="36" height="58" rx="16" fill={accent} />
+        {/* arms */}
+        <g className={anim.armL} style={{ transformOrigin: "88px 58px" }}>
+          <line x1="88" y1="58" x2="62" y2="92" stroke={SKIN} strokeWidth="15" strokeLinecap="round" />
+          <circle cx="62" cy="92" r="8" fill={SKIN} />
+        </g>
+        <g className={anim.armR} style={{ transformOrigin: "112px 58px" }}>
+          <line x1="112" y1="58" x2="138" y2="92" stroke={SKIN} strokeWidth="15" strokeLinecap="round" />
+          <circle cx="138" cy="92" r="8" fill={SKIN} />
+          {hasRacket && (
+            <g>
+              <line x1="138" y1="92" x2="154" y2="66" stroke="#D8DCD4" strokeWidth="3" strokeLinecap="round" />
+              <ellipse cx="159" cy="58" rx="12" ry="15" fill="none" stroke="#D8DCD4" strokeWidth="3" transform="rotate(28 159 58)" />
+            </g>
+          )}
+        </g>
+        {/* neck + head */}
+        <rect x="94" y="26" width="12" height="12" fill={SKIN} />
+        <circle cx="100" cy="18" r="16" fill={SKIN} />
+        <path d="M 84 14 Q 100 -2 116 14 Q 116 4 100 2 Q 84 4 84 14 Z" fill={HAIR} />
+        <circle cx="94" cy="18" r="1.6" fill="#2B2118" />
+        <circle cx="106" cy="18" r="1.6" fill="#2B2118" />
+      </g>
+    </svg>
+  );
+}
+
+/* ----------------------------- SHARED UI ----------------------------- */
+
+function CategoryDot({ id }) {
+  const cat = CATEGORIES.find((c) => c.id === id);
+  return <span className="cat-dot" style={{ background: cat?.color }} />;
+}
+
+function ExerciseCard({ ex, onOpen, done }) {
+  const cat = CATEGORIES.find((c) => c.id === ex.category);
+  return (
+    <button className="ex-card" onClick={() => onOpen(ex)}>
+      <div className="ex-card-demo">
+        <ExerciseDemo pattern={ex.pattern} accent={cat?.color} />
+        {done && (
+          <div className="ex-done-badge">
+            <CheckCircle2 size={16} />
+          </div>
+        )}
+      </div>
+      <div className="ex-card-body">
+        <div className="ex-card-cat">
+          <CategoryDot id={ex.category} />
+          <span>{cat?.short}</span>
+          <span className="ex-card-diff">{ex.difficulty}</span>
+        </div>
+        <div className="ex-card-name">{ex.name}</div>
+        <div className="ex-card-meta">{ex.sets} × {ex.reps}</div>
+      </div>
+    </button>
+  );
+}
+
+function ExerciseModal({ ex, onClose, onLog, existingLog }) {
+  const [sets, setSets] = useState(existingLog?.sets ?? ex.sets);
+  const [reps, setReps] = useState(existingLog?.reps ?? ex.reps);
+  const [weight, setWeight] = useState(existingLog?.weight ?? "");
+  const cat = CATEGORIES.find((c) => c.id === ex.category);
+
+  if (!ex) return null;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}><X size={18} /></button>
+        <div className="modal-demo">
+          {ex.video ? (
+            <iframe
+              className="modal-video"
+              src={`https://www.youtube.com/embed/${ex.video}?rel=0&modestbranding=1`}
+              title={`${ex.name} demo`}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <ExerciseDemo pattern={ex.pattern} accent={cat?.color} />
+          )}
+        </div>
+        {ex.video && (
+          <a className="video-source-link" href={`https://www.youtube.com/watch?v=${ex.video}`} target="_blank" rel="noopener noreferrer">
+            Open on YouTube ↗
+          </a>
+        )}
+        <div className="modal-cat">
+          <CategoryDot id={ex.category} /> {cat?.label} · {ex.difficulty}
+        </div>
+        <h2 className="modal-title">{ex.name}</h2>
+        <p className="modal-cue">{ex.cue}</p>
+        <div className="modal-equip">
+          {ex.equipment.map((eq) => (
+            <span className="chip" key={eq}>{EQUIPMENT.find((e) => e.id === eq)?.label}</span>
+          ))}
+        </div>
+
+        <div className="modal-log">
+          <div className="modal-log-row">
+            <label>Sets<input type="number" min="1" value={sets} onChange={(e) => setSets(e.target.value)} /></label>
+            <label>Reps<input type="text" value={reps} onChange={(e) => setReps(e.target.value)} /></label>
+            <label>Weight<input type="text" placeholder="optional" value={weight} onChange={(e) => setWeight(e.target.value)} /></label>
+          </div>
+          <button
+            className="btn-complete"
+            onClick={() => {
+              onLog(ex.id, { completed: true, sets, reps, weight, timestamp: Date.now() });
+              onClose();
+            }}
+          >
+            <CheckCircle2 size={16} /> Mark complete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------------- VIEWS ----------------------------- */
+
+function LibraryView({ logs, onOpen }) {
+  const [catFilter, setCatFilter] = useState("all");
+  const [equipFilter, setEquipFilter] = useState("all");
+
+  const filtered = EXERCISES.filter(
+    (ex) =>
+      (catFilter === "all" || ex.category === catFilter) &&
+      (equipFilter === "all" || ex.equipment.includes(equipFilter))
+  );
+
+  return (
+    <div>
+      <div className="filters">
+        <select value={catFilter} onChange={(e) => setCatFilter(e.target.value)}>
+          <option value="all">All categories</option>
+          {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+        </select>
+        <select value={equipFilter} onChange={(e) => setEquipFilter(e.target.value)}>
+          <option value="all">All equipment</option>
+          {EQUIPMENT.map((e) => <option key={e.id} value={e.id}>{e.label}</option>)}
+        </select>
+        <span className="filter-count">{filtered.length} exercises</span>
+      </div>
+      <div className="ex-grid">
+        {filtered.map((ex) => (
+          <ExerciseCard key={ex.id} ex={ex} onOpen={onOpen} done={!!logs[dayKeyFor(ex.id)]} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function dayKeyFor(exId, dateStr) {
+  const d = dateStr || new Date().toISOString().slice(0, 10);
+  return `${d}_${exId}`;
+}
+
+function WeeklyView({ daysPerWeek, logs, onOpen }) {
+  const dayGroups = useMemo(() => buildDayGroups(daysPerWeek), [daysPerWeek]);
+  const [activeDay, setActiveDay] = useState(0);
+  useEffect(() => { if (activeDay >= daysPerWeek) setActiveDay(0); }, [daysPerWeek]);
+
+  return (
+    <div>
+      <div className="day-tabs">
+        {dayGroups.map((_, i) => (
+          <button key={i} className={`day-tab ${i === activeDay ? "active" : ""}`} onClick={() => setActiveDay(i)}>
+            Day {i + 1}
+          </button>
+        ))}
+      </div>
+      <div className="ex-grid">
+        {dayGroups[activeDay]?.map((ex) => (
+          <ExerciseCard key={ex.id} ex={ex} onOpen={onOpen} done={!!logs[dayKeyFor(ex.id)]} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProgressiveView({ daysPerWeek, logs, onOpen }) {
+  const dayGroups = useMemo(() => buildDayGroups(daysPerWeek), [daysPerWeek]);
+  const [week, setWeek] = useState(0);
+  const [activeDay, setActiveDay] = useState(0);
+  useEffect(() => { if (activeDay >= daysPerWeek) setActiveDay(0); }, [daysPerWeek]);
+
+  const wk = WEEK_MULTIPLIERS[week];
+
+  return (
+    <div>
+      <div className="week-nav">
+        <button onClick={() => setWeek((w) => Math.max(0, w - 1))} disabled={week === 0}><ChevronLeft size={18} /></button>
+        <div className="week-nav-label">
+          <span className="week-nav-title">{wk.label} — {wk.tag}</span>
+          <span className="week-nav-note">{wk.note}</span>
+        </div>
+        <button onClick={() => setWeek((w) => Math.min(3, w + 1))} disabled={week === 3}><ChevronRight size={18} /></button>
+      </div>
+      <div className="day-tabs">
+        {dayGroups.map((_, i) => (
+          <button key={i} className={`day-tab ${i === activeDay ? "active" : ""}`} onClick={() => setActiveDay(i)}>
+            Day {i + 1}
+          </button>
+        ))}
+      </div>
+      <div className="ex-grid">
+        {dayGroups[activeDay]?.map((ex) => (
+          <ExerciseCard
+            key={ex.id}
+            ex={{ ...ex, sets: ex.sets + wk.setsAdd, reps: bumpReps(ex.reps, week) }}
+            onOpen={(exWithWeek) => onOpen(exWithWeek)}
+            done={!!logs[dayKeyFor(ex.id)]}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProgressView({ logs }) {
+  const entries = Object.entries(logs);
+  const totalCompleted = entries.filter(([, v]) => v.completed).length;
+
+  const byDate = {};
+  entries.forEach(([key, v]) => {
+    const date = key.split("_")[0];
+    byDate[date] = (byDate[date] || 0) + 1;
+  });
+  const activeDays = Object.keys(byDate).sort();
+
+  let streak = 0;
+  let cursor = new Date();
+  for (;;) {
+    const iso = cursor.toISOString().slice(0, 10);
+    if (byDate[iso]) {
+      streak += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    } else break;
+  }
+
+  const byCategory = CATEGORIES.map((cat) => {
+    const count = entries.filter(([key]) => {
+      const exId = key.split("_")[1];
+      return EXERCISES.find((e) => e.id === exId)?.category === cat.id;
+    }).length;
+    return { ...cat, count };
+  });
+  const maxCat = Math.max(1, ...byCategory.map((c) => c.count));
+
+  return (
+    <div className="progress-view">
+      <div className="stat-row">
+        <div className="stat-card">
+          <Flame size={20} />
+          <div className="stat-num">{streak}</div>
+          <div className="stat-label">Day streak</div>
+        </div>
+        <div className="stat-card">
+          <CheckCircle2 size={20} />
+          <div className="stat-num">{totalCompleted}</div>
+          <div className="stat-label">Exercises logged</div>
+        </div>
+        <div className="stat-card">
+          <Calendar size={20} />
+          <div className="stat-num">{activeDays.length}</div>
+          <div className="stat-label">Active days</div>
+        </div>
+      </div>
+
+      <div className="cat-bars">
+        {byCategory.map((c) => (
+          <div className="cat-bar-row" key={c.id}>
+            <span className="cat-bar-label"><CategoryDot id={c.id} />{c.label}</span>
+            <div className="cat-bar-track">
+              <div className="cat-bar-fill" style={{ width: `${(c.count / maxCat) * 100}%`, background: c.color }} />
+            </div>
+            <span className="cat-bar-count">{c.count}</span>
+          </div>
+        ))}
+      </div>
+
+      {activeDays.length === 0 && (
+        <div className="empty-state">
+          No sessions logged yet. Open any exercise and mark it complete to start tracking.
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ----------------------------- APP ----------------------------- */
+
+function App() {
+  const [tab, setTab] = useState("weekly");
+  const [settings, setSettings] = useState({ daysPerWeek: 4 });
+  const [logs, setLogs] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [openEx, setOpenEx] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+
+  useEffect(() => {
+    setSettings(loadJSON(SETTINGS_KEY, { daysPerWeek: 4 }));
+    setLogs(loadJSON(LOGS_KEY, {}));
+    setLoading(false);
+  }, []);
+
+  const updateDaysPerWeek = useCallback((n) => {
+    const next = { ...settings, daysPerWeek: n };
+    setSettings(next);
+    saveJSON(SETTINGS_KEY, next);
+  }, [settings]);
+
+  const handleLog = useCallback((exId, entry) => {
+    setLogs((prev) => {
+      const next = { ...prev, [dayKeyFor(exId)]: entry };
+      saveJSON(LOGS_KEY, next);
+      return next;
+    });
+  }, []);
+
+  const resetProgress = useCallback(() => {
+    setLogs({});
+    saveJSON(LOGS_KEY, {});
+  }, []);
+
+  const TABS = [
+    { id: "library", label: "Library", icon: Library },
+    { id: "weekly", label: "Weekly", icon: Calendar },
+    { id: "progressive", label: "4-Week Plan", icon: TrendingUp },
+    { id: "progress", label: "Progress", icon: Flame },
+  ];
+
+  return (
+    <div className="app-root">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap');
+
+        .app-root {
+          --court-deep: #0F3A2C;
+          --court-mid: #175C43;
+          --line: #F4F7F1;
+          --shuttle: #E4FF6B;
+          --smash: #FF5C4D;
+          --muted: #86A99B;
+          font-family: 'Work Sans', sans-serif;
+          background: var(--court-deep);
+          color: var(--line);
+          min-height: 100%;
+          padding: 24px 20px 60px;
+          box-sizing: border-box;
+        }
+        .app-root * { box-sizing: border-box; }
+        .app-header {
+          display: flex; align-items: center; justify-content: space-between;
+          margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+        }
+        .app-title {
+          font-family: 'Oswald', sans-serif; font-weight: 700; letter-spacing: 0.5px;
+          font-size: 28px; text-transform: uppercase; display: flex; align-items: center; gap: 10px;
+        }
+        .app-title .accent { color: var(--shuttle); }
+        .settings-btn {
+          background: rgba(244,247,241,0.08); border: 1px solid rgba(244,247,241,0.15);
+          color: var(--line); border-radius: 10px; padding: 8px 12px; cursor: pointer;
+          display: flex; align-items: center; gap: 6px; font-family: 'Work Sans', sans-serif; font-size: 13px;
+        }
+        .settings-btn:hover { background: rgba(244,247,241,0.14); }
+
+        .tabs {
+          display: flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid rgba(244,247,241,0.12);
+          overflow-x: auto;
+        }
+        .tab-btn {
+          background: none; border: none; color: var(--muted); padding: 10px 14px;
+          font-family: 'Oswald', sans-serif; font-size: 14px; letter-spacing: 0.3px; text-transform: uppercase;
+          cursor: pointer; display: flex; align-items: center; gap: 6px; border-bottom: 2px solid transparent;
+          white-space: nowrap;
+        }
+        .tab-btn.active { color: var(--shuttle); border-bottom-color: var(--shuttle); }
+
+        .filters { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        .filters select {
+          background: rgba(244,247,241,0.08); border: 1px solid rgba(244,247,241,0.18); color: var(--line);
+          padding: 7px 10px; border-radius: 8px; font-family: 'Work Sans', sans-serif; font-size: 13px;
+        }
+        .filter-count { color: var(--muted); font-size: 13px; margin-left: auto; }
+
+        .day-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .day-tab {
+          background: rgba(244,247,241,0.06); border: 1px solid rgba(244,247,241,0.14); color: var(--muted);
+          padding: 7px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; font-family: 'Work Sans', sans-serif;
+        }
+        .day-tab.active { background: var(--shuttle); color: var(--court-deep); font-weight: 600; border-color: var(--shuttle); }
+
+        .week-nav {
+          display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          margin-bottom: 16px; background: rgba(244,247,241,0.06); border-radius: 12px; padding: 10px 14px;
+        }
+        .week-nav button { background: rgba(244,247,241,0.1); border: none; color: var(--line); border-radius: 8px; padding: 6px; cursor: pointer; }
+        .week-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+        .week-nav-label { text-align: center; flex: 1; }
+        .week-nav-title { display: block; font-family: 'Oswald', sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .week-nav-note { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+        .ex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+        .ex-card {
+          background: rgba(244,247,241,0.05); border: 1px solid rgba(244,247,241,0.1); border-radius: 14px;
+          padding: 0; cursor: pointer; text-align: left; overflow: hidden; color: var(--line);
+          font-family: 'Work Sans', sans-serif; transition: transform 0.15s, border-color 0.15s;
+        }
+        .ex-card:hover { border-color: var(--shuttle); transform: translateY(-2px); }
+        .ex-card-demo { position: relative; background: var(--court-mid); aspect-ratio: 1.3; }
+        .ex-done-badge {
+          position: absolute; top: 8px; right: 8px; background: var(--shuttle); color: var(--court-deep);
+          border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+        }
+        .ex-card-body { padding: 10px 12px 12px; }
+        .ex-card-cat { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+        .ex-card-diff { margin-left: auto; }
+        .ex-card-name { font-weight: 600; font-size: 14px; line-height: 1.3; margin-bottom: 4px; }
+        .ex-card-meta { font-size: 12px; color: var(--muted); }
+        .cat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+        .demo-svg { width: 100%; height: 100%; display: block; }
+        .court-line { stroke: rgba(244,247,241,0.35); stroke-width: 2; }
+        .court-line-faint { stroke: rgba(244,247,241,0.12); stroke-width: 1; }
+        .fig-shadow { fill: rgba(0,0,0,0.22); }
+
+        .modal-overlay {
+          position: fixed; inset: 0; background: rgba(6,20,15,0.75); display: flex; align-items: center; justify-content: center;
+          padding: 20px; z-index: 50;
+        }
+        .modal-card {
+          background: var(--court-deep); border: 1px solid rgba(244,247,241,0.15); border-radius: 18px;
+          max-width: 420px; width: 100%; padding: 20px; position: relative; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-close { position: absolute; top: 14px; right: 14px; background: rgba(244,247,241,0.1); border: none; color: var(--line); border-radius: 8px; padding: 6px; cursor: pointer; }
+        .modal-demo { background: var(--court-mid); border-radius: 12px; aspect-ratio: 1.6; margin-bottom: 14px; overflow: hidden; }
+        .modal-video { width: 100%; height: 100%; display: block; border-radius: 12px; }
+        .video-source-link { display: inline-block; font-size: 12px; color: var(--muted); text-decoration: none; margin: -6px 0 14px; }
+        .video-source-link:hover { color: var(--shuttle); }
+        .modal-cat { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+        .modal-title { font-family: 'Oswald', sans-serif; font-size: 22px; text-transform: uppercase; margin: 0 0 10px; }
+        .modal-cue { font-size: 14px; line-height: 1.5; color: rgba(244,247,241,0.85); margin-bottom: 14px; }
+        .modal-equip { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+        .chip { background: rgba(244,247,241,0.1); padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+        .modal-log { border-top: 1px solid rgba(244,247,241,0.12); padding-top: 14px; }
+        .modal-log-row { display: flex; gap: 10px; margin-bottom: 14px; }
+        .modal-log-row label { flex: 1; display: flex; flex-direction: column; font-size: 11px; color: var(--muted); gap: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .modal-log-row input {
+          background: rgba(244,247,241,0.08); border: 1px solid rgba(244,247,241,0.18); color: var(--line);
+          padding: 8px; border-radius: 8px; font-family: 'Work Sans', sans-serif; font-size: 14px; width: 100%;
+        }
+        .btn-complete {
+          width: 100%; background: var(--shuttle); color: var(--court-deep); border: none; border-radius: 10px;
+          padding: 12px; font-weight: 600; font-family: 'Work Sans', sans-serif; font-size: 14px; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+
+        .settings-panel {
+          background: rgba(244,247,241,0.06); border: 1px solid rgba(244,247,241,0.14); border-radius: 14px;
+          padding: 16px; margin-bottom: 20px;
+        }
+        .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .stepper { display: flex; align-items: center; gap: 10px; }
+        .stepper button { background: rgba(244,247,241,0.1); border: none; color: var(--line); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .stepper-val { font-family: 'Oswald', sans-serif; font-size: 18px; min-width: 20px; text-align: center; }
+        .reset-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid rgba(255,92,77,0.5); color: var(--smash); padding: 7px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; margin-top: 12px; }
+
+        .progress-view { }
+        .stat-row { display: flex; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
+        .stat-card { flex: 1; min-width: 110px; background: rgba(244,247,241,0.06); border: 1px solid rgba(244,247,241,0.12); border-radius: 14px; padding: 16px; text-align: center; color: var(--shuttle); }
+        .stat-num { font-family: 'Oswald', sans-serif; font-size: 30px; color: var(--line); margin: 6px 0 2px; }
+        .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+        .cat-bars { display: flex; flex-direction: column; gap: 12px; }
+        .cat-bar-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+        .cat-bar-label { display: flex; align-items: center; gap: 6px; width: 150px; flex-shrink: 0; }
+        .cat-bar-track { flex: 1; background: rgba(244,247,241,0.08); border-radius: 6px; height: 8px; overflow: hidden; }
+        .cat-bar-fill { height: 100%; border-radius: 6px; }
+        .cat-bar-count { width: 24px; text-align: right; color: var(--muted); }
+        .empty-state { margin-top: 24px; text-align: center; color: var(--muted); font-size: 14px; padding: 30px; border: 1px dashed rgba(244,247,241,0.2); border-radius: 14px; }
+        .loading-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+
+        @keyframes splitstepLegs { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px) scaleX(1.15); } }
+        @keyframes splitstepTorso { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .anim-splitstep-legs { animation: splitstepLegs 0.6s ease-in-out infinite; }
+        .anim-splitstep-torso { animation: splitstepTorso 0.6s ease-in-out infinite; }
+
+        @keyframes shuffleLegs { 0% { transform: translateX(-14px); } 50% { transform: translateX(14px); } 100% { transform: translateX(-14px); } }
+        @keyframes shuffleTorso { 0% { transform: translateX(-14px); } 50% { transform: translateX(14px); } 100% { transform: translateX(-14px); } }
+        .anim-shuffle-legs { animation: shuffleLegs 1.4s ease-in-out infinite; }
+        .anim-shuffle-torso { animation: shuffleTorso 1.4s ease-in-out infinite; }
+
+        @keyframes lungeLegs { 0%,100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(10px) scaleY(0.85); } }
+        @keyframes lungeTorso { 0%,100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+        .anim-lunge-legs { animation: lungeLegs 1.3s ease-in-out infinite; }
+        .anim-lunge-torso { animation: lungeTorso 1.3s ease-in-out infinite; }
+
+        @keyframes lungeSideLegs { 0%,100% { transform: translateX(0) scaleY(1); } 50% { transform: translateX(-16px) scaleY(0.88); } }
+        @keyframes lungeSideTorso { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-16px); } }
+        .anim-lungeside-legs { animation: lungeSideLegs 1.3s ease-in-out infinite; }
+        .anim-lungeside-torso { animation: lungeSideTorso 1.3s ease-in-out infinite; }
+
+        @keyframes swingArm { 0% { transform: rotate(60deg); } 50% { transform: rotate(-70deg); } 100% { transform: rotate(60deg); } }
+        @keyframes swingTorso { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+        .anim-swing-arm { animation: swingArm 1.1s ease-in-out infinite; }
+        .anim-swing-torso { animation: swingTorso 1.1s ease-in-out infinite; }
+
+        @keyframes pressArmR { 0%,100% { transform: rotate(20deg); } 50% { transform: rotate(-95deg); } }
+        @keyframes pressArmL { 0%,100% { transform: rotate(-20deg) scaleX(-1); } 50% { transform: rotate(95deg) scaleX(-1); } }
+        .anim-press-arm-r { animation: pressArmR 1.2s ease-in-out infinite; }
+        .anim-press-arm-l { animation: pressArmL 1.2s ease-in-out infinite; }
+
+        @keyframes pullArmR { 0%,100% { transform: rotate(10deg) translateX(0); } 50% { transform: rotate(-25deg) translateX(-8px); } }
+        @keyframes pullArmL { 0%,100% { transform: rotate(-10deg) translateX(0) scaleX(-1); } 50% { transform: rotate(25deg) translateX(8px) scaleX(-1); } }
+        .anim-pull-arm-r { animation: pullArmR 1.2s ease-in-out infinite; }
+        .anim-pull-arm-l { animation: pullArmL 1.2s ease-in-out infinite; }
+
+        @keyframes twistTorso { 0%,100% { transform: rotate(-18deg); } 50% { transform: rotate(18deg); } }
+        .anim-twist-torso { animation: twistTorso 1s ease-in-out infinite; transform-origin: 100px 90px; }
+
+        @keyframes raiseArmR { 0%,100% { transform: rotate(70deg); } 50% { transform: rotate(-40deg); } }
+        @keyframes raiseArmL { 0%,100% { transform: rotate(-70deg) scaleX(-1); } 50% { transform: rotate(40deg) scaleX(-1); } }
+        .anim-raise-arm-r { animation: raiseArmR 1.3s ease-in-out infinite; }
+        .anim-raise-arm-l { animation: raiseArmL 1.3s ease-in-out infinite; }
+
+        @keyframes plankPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+        .anim-plank-pulse { animation: plankPulse 1.4s ease-in-out infinite; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .anim-splitstep-legs, .anim-splitstep-torso, .anim-shuffle-legs, .anim-shuffle-torso,
+          .anim-lunge-legs, .anim-lunge-torso, .anim-lungeside-legs, .anim-lungeside-torso,
+          .anim-swing-arm, .anim-swing-torso, .anim-press-arm-r, .anim-press-arm-l,
+          .anim-pull-arm-r, .anim-pull-arm-l, .anim-twist-torso, .anim-raise-arm-r,
+          .anim-raise-arm-l, .anim-plank-pulse { animation: none; }
+        }
+      `}</style>
+
+      <div className="app-header">
+        <div className="app-title"><Dumbbell size={26} /> Smash<span className="accent">Prep</span></div>
+        <button className="settings-btn" onClick={() => setShowSettings((s) => !s)}>
+          <SettingsIcon size={15} /> {settings.daysPerWeek} days/week
+        </button>
+      </div>
+
+      {showSettings && (
+        <div className="settings-panel">
+          <div className="settings-row">
+            <span>Training days per week</span>
+            <div className="stepper">
+              <button onClick={() => updateDaysPerWeek(Math.max(3, settings.daysPerWeek - 1))}>−</button>
+              <span className="stepper-val">{settings.daysPerWeek}</span>
+              <button onClick={() => updateDaysPerWeek(Math.min(6, settings.daysPerWeek + 1))}>+</button>
+            </div>
+          </div>
+          <button className="reset-btn" onClick={resetProgress}><RotateCcw size={13} /> Reset all progress</button>
+        </div>
+      )}
+
+      <div className="tabs">
+        {TABS.map((t) => (
+          <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
+            <t.icon size={15} /> {t.label}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="loading-state">Loading your training data…</div>
+      ) : (
+        <>
+          {tab === "library" && <LibraryView logs={logs} onOpen={setOpenEx} />}
+          {tab === "weekly" && <WeeklyView daysPerWeek={settings.daysPerWeek} logs={logs} onOpen={setOpenEx} />}
+          {tab === "progressive" && <ProgressiveView daysPerWeek={settings.daysPerWeek} logs={logs} onOpen={setOpenEx} />}
+          {tab === "progress" && <ProgressView logs={logs} />}
+        </>
+      )}
+
+      {openEx && (
+        <ExerciseModal
+          ex={openEx}
+          existingLog={logs[dayKeyFor(openEx.id)]}
+          onLog={handleLog}
+          onClose={() => setOpenEx(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+const rootEl = document.getElementById("root");
+ReactDOM.createRoot(rootEl).render(<App />);
+</script>
+</body>
+</html>
