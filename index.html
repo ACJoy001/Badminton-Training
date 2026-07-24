@@ -7,10 +7,215 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+
+        .app-root {
+          --court-deep: #0F3A2C;
+          --court-mid: #175C43;
+          --line: #F4F7F1;
+          --shuttle: #E4FF6B;
+          --smash: #FF5C4D;
+          --muted: #86A99B;
+          font-family: 'Work Sans', sans-serif;
+          background: var(--court-deep);
+          color: var(--line);
+          min-height: 100%;
+          padding: 24px 20px 60px;
+          box-sizing: border-box;
+        }
+        .app-root * { box-sizing: border-box; }
+        .app-header {
+          display: flex; align-items: center; justify-content: space-between;
+          margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+        }
+        .app-title {
+          font-family: 'Oswald', sans-serif; font-weight: 700; letter-spacing: 0.5px;
+          font-size: 28px; text-transform: uppercase; display: flex; align-items: center; gap: 10px;
+        }
+        .app-title .accent { color: var(--shuttle); }
+        .settings-btn {
+          background: rgba(244,247,241,0.08); border: 1px solid rgba(244,247,241,0.15);
+          color: var(--line); border-radius: 10px; padding: 8px 12px; cursor: pointer;
+          display: flex; align-items: center; gap: 6px; font-family: 'Work Sans', sans-serif; font-size: 13px;
+        }
+        .settings-btn:hover { background: rgba(244,247,241,0.14); }
+
+        .tabs {
+          display: flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid rgba(244,247,241,0.12);
+          overflow-x: auto;
+        }
+        .tab-btn {
+          background: none; border: none; color: var(--muted); padding: 10px 14px;
+          font-family: 'Oswald', sans-serif; font-size: 14px; letter-spacing: 0.3px; text-transform: uppercase;
+          cursor: pointer; display: flex; align-items: center; gap: 6px; border-bottom: 2px solid transparent;
+          white-space: nowrap;
+        }
+        .tab-btn.active { color: var(--shuttle); border-bottom-color: var(--shuttle); }
+
+        .filters { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        .filters select {
+          background: rgba(244,247,241,0.08); border: 1px solid rgba(244,247,241,0.18); color: var(--line);
+          padding: 7px 10px; border-radius: 8px; font-family: 'Work Sans', sans-serif; font-size: 13px;
+        }
+        .filter-count { color: var(--muted); font-size: 13px; margin-left: auto; }
+
+        .day-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .day-tab {
+          background: rgba(244,247,241,0.06); border: 1px solid rgba(244,247,241,0.14); color: var(--muted);
+          padding: 7px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; font-family: 'Work Sans', sans-serif;
+        }
+        .day-tab.active { background: var(--shuttle); color: var(--court-deep); font-weight: 600; border-color: var(--shuttle); }
+
+        .week-nav {
+          display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          margin-bottom: 16px; background: rgba(244,247,241,0.06); border-radius: 12px; padding: 10px 14px;
+        }
+        .week-nav button { background: rgba(244,247,241,0.1); border: none; color: var(--line); border-radius: 8px; padding: 6px; cursor: pointer; }
+        .week-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+        .week-nav-label { text-align: center; flex: 1; }
+        .week-nav-title { display: block; font-family: 'Oswald', sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .week-nav-note { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+        .ex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+        .ex-card {
+          background: rgba(244,247,241,0.05); border: 1px solid rgba(244,247,241,0.1); border-radius: 14px;
+          padding: 0; cursor: pointer; text-align: left; overflow: hidden; color: var(--line);
+          font-family: 'Work Sans', sans-serif; transition: transform 0.15s, border-color 0.15s;
+        }
+        .ex-card:hover { border-color: var(--shuttle); transform: translateY(-2px); }
+        .ex-card-demo { position: relative; background: var(--court-mid); aspect-ratio: 1.3; }
+        .ex-done-badge {
+          position: absolute; top: 8px; right: 8px; background: var(--shuttle); color: var(--court-deep);
+          border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+        }
+        .ex-card-body { padding: 10px 12px 12px; }
+        .ex-card-cat { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+        .ex-card-diff { margin-left: auto; }
+        .ex-card-name { font-weight: 600; font-size: 14px; line-height: 1.3; margin-bottom: 4px; }
+        .ex-card-meta { font-size: 12px; color: var(--muted); }
+        .cat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+        .demo-svg { width: 100%; height: 100%; display: block; }
+        .court-line { stroke: rgba(244,247,241,0.35); stroke-width: 2; }
+        .court-line-faint { stroke: rgba(244,247,241,0.12); stroke-width: 1; }
+        .fig-shadow { fill: rgba(0,0,0,0.22); }
+
+        .modal-overlay {
+          position: fixed; inset: 0; background: rgba(6,20,15,0.75); display: flex; align-items: center; justify-content: center;
+          padding: 20px; z-index: 50;
+        }
+        .modal-card {
+          background: var(--court-deep); border: 1px solid rgba(244,247,241,0.15); border-radius: 18px;
+          max-width: 420px; width: 100%; padding: 20px; position: relative; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-close { position: absolute; top: 14px; right: 14px; background: rgba(244,247,241,0.1); border: none; color: var(--line); border-radius: 8px; padding: 6px; cursor: pointer; }
+        .modal-demo { background: var(--court-mid); border-radius: 12px; aspect-ratio: 1.6; margin-bottom: 14px; overflow: hidden; }
+        .modal-video { width: 100%; height: 100%; display: block; border-radius: 12px; }
+        .video-source-link { display: inline-block; font-size: 12px; color: var(--muted); text-decoration: none; margin: -6px 0 14px; }
+        .video-source-link:hover { color: var(--shuttle); }
+        .modal-cat { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+        .modal-title { font-family: 'Oswald', sans-serif; font-size: 22px; text-transform: uppercase; margin: 0 0 10px; }
+        .modal-cue { font-size: 14px; line-height: 1.5; color: rgba(244,247,241,0.85); margin-bottom: 14px; }
+        .modal-equip { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+        .chip { background: rgba(244,247,241,0.1); padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+        .modal-log { border-top: 1px solid rgba(244,247,241,0.12); padding-top: 14px; }
+        .modal-log-row { display: flex; gap: 10px; margin-bottom: 14px; }
+        .modal-log-row label { flex: 1; display: flex; flex-direction: column; font-size: 11px; color: var(--muted); gap: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .modal-log-row input {
+          background: rgba(244,247,241,0.08); border: 1px solid rgba(244,247,241,0.18); color: var(--line);
+          padding: 8px; border-radius: 8px; font-family: 'Work Sans', sans-serif; font-size: 14px; width: 100%;
+        }
+        .btn-complete {
+          width: 100%; background: var(--shuttle); color: var(--court-deep); border: none; border-radius: 10px;
+          padding: 12px; font-weight: 600; font-family: 'Work Sans', sans-serif; font-size: 14px; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+
+        .settings-panel {
+          background: rgba(244,247,241,0.06); border: 1px solid rgba(244,247,241,0.14); border-radius: 14px;
+          padding: 16px; margin-bottom: 20px;
+        }
+        .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .stepper { display: flex; align-items: center; gap: 10px; }
+        .stepper button { background: rgba(244,247,241,0.1); border: none; color: var(--line); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .stepper-val { font-family: 'Oswald', sans-serif; font-size: 18px; min-width: 20px; text-align: center; }
+        .reset-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid rgba(255,92,77,0.5); color: var(--smash); padding: 7px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; margin-top: 12px; }
+
+        .progress-view { }
+        .stat-row { display: flex; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
+        .stat-card { flex: 1; min-width: 110px; background: rgba(244,247,241,0.06); border: 1px solid rgba(244,247,241,0.12); border-radius: 14px; padding: 16px; text-align: center; color: var(--shuttle); }
+        .stat-num { font-family: 'Oswald', sans-serif; font-size: 30px; color: var(--line); margin: 6px 0 2px; }
+        .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+        .cat-bars { display: flex; flex-direction: column; gap: 12px; }
+        .cat-bar-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+        .cat-bar-label { display: flex; align-items: center; gap: 6px; width: 150px; flex-shrink: 0; }
+        .cat-bar-track { flex: 1; background: rgba(244,247,241,0.08); border-radius: 6px; height: 8px; overflow: hidden; }
+        .cat-bar-fill { height: 100%; border-radius: 6px; }
+        .cat-bar-count { width: 24px; text-align: right; color: var(--muted); }
+        .empty-state { margin-top: 24px; text-align: center; color: var(--muted); font-size: 14px; padding: 30px; border: 1px dashed rgba(244,247,241,0.2); border-radius: 14px; }
+        .loading-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+
+        @keyframes splitstepLegs { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px) scaleX(1.15); } }
+        @keyframes splitstepTorso { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .anim-splitstep-legs { animation: splitstepLegs 0.6s ease-in-out infinite; }
+        .anim-splitstep-torso { animation: splitstepTorso 0.6s ease-in-out infinite; }
+
+        @keyframes shuffleLegs { 0% { transform: translateX(-14px); } 50% { transform: translateX(14px); } 100% { transform: translateX(-14px); } }
+        @keyframes shuffleTorso { 0% { transform: translateX(-14px); } 50% { transform: translateX(14px); } 100% { transform: translateX(-14px); } }
+        .anim-shuffle-legs { animation: shuffleLegs 1.4s ease-in-out infinite; }
+        .anim-shuffle-torso { animation: shuffleTorso 1.4s ease-in-out infinite; }
+
+        @keyframes lungeLegs { 0%,100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(10px) scaleY(0.85); } }
+        @keyframes lungeTorso { 0%,100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+        .anim-lunge-legs { animation: lungeLegs 1.3s ease-in-out infinite; }
+        .anim-lunge-torso { animation: lungeTorso 1.3s ease-in-out infinite; }
+
+        @keyframes lungeSideLegs { 0%,100% { transform: translateX(0) scaleY(1); } 50% { transform: translateX(-16px) scaleY(0.88); } }
+        @keyframes lungeSideTorso { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-16px); } }
+        .anim-lungeside-legs { animation: lungeSideLegs 1.3s ease-in-out infinite; }
+        .anim-lungeside-torso { animation: lungeSideTorso 1.3s ease-in-out infinite; }
+
+        @keyframes swingArm { 0% { transform: rotate(60deg); } 50% { transform: rotate(-70deg); } 100% { transform: rotate(60deg); } }
+        @keyframes swingTorso { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+        .anim-swing-arm { animation: swingArm 1.1s ease-in-out infinite; }
+        .anim-swing-torso { animation: swingTorso 1.1s ease-in-out infinite; }
+
+        @keyframes pressArmR { 0%,100% { transform: rotate(20deg); } 50% { transform: rotate(-95deg); } }
+        @keyframes pressArmL { 0%,100% { transform: rotate(-20deg) scaleX(-1); } 50% { transform: rotate(95deg) scaleX(-1); } }
+        .anim-press-arm-r { animation: pressArmR 1.2s ease-in-out infinite; }
+        .anim-press-arm-l { animation: pressArmL 1.2s ease-in-out infinite; }
+
+        @keyframes pullArmR { 0%,100% { transform: rotate(10deg) translateX(0); } 50% { transform: rotate(-25deg) translateX(-8px); } }
+        @keyframes pullArmL { 0%,100% { transform: rotate(-10deg) translateX(0) scaleX(-1); } 50% { transform: rotate(25deg) translateX(8px) scaleX(-1); } }
+        .anim-pull-arm-r { animation: pullArmR 1.2s ease-in-out infinite; }
+        .anim-pull-arm-l { animation: pullArmL 1.2s ease-in-out infinite; }
+
+        @keyframes twistTorso { 0%,100% { transform: rotate(-18deg); } 50% { transform: rotate(18deg); } }
+        .anim-twist-torso { animation: twistTorso 1s ease-in-out infinite; transform-origin: 100px 90px; }
+
+        @keyframes raiseArmR { 0%,100% { transform: rotate(70deg); } 50% { transform: rotate(-40deg); } }
+        @keyframes raiseArmL { 0%,100% { transform: rotate(-70deg) scaleX(-1); } 50% { transform: rotate(40deg) scaleX(-1); } }
+        .anim-raise-arm-r { animation: raiseArmR 1.3s ease-in-out infinite; }
+        .anim-raise-arm-l { animation: raiseArmL 1.3s ease-in-out infinite; }
+
+        @keyframes plankPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+        .anim-plank-pulse { animation: plankPulse 1.4s ease-in-out infinite; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .anim-splitstep-legs, .anim-splitstep-torso, .anim-shuffle-legs, .anim-shuffle-torso,
+          .anim-lunge-legs, .anim-lunge-torso, .anim-lungeside-legs, .anim-lungeside-torso,
+          .anim-swing-arm, .anim-swing-torso, .anim-press-arm-r, .anim-press-arm-l,
+          .anim-pull-arm-r, .anim-pull-arm-l, .anim-twist-torso, .anim-raise-arm-r,
+          .anim-raise-arm-l, .anim-plank-pulse { animation: none; }
+        }
+</style>
 </head>
 <body style="margin:0;">
 <div id="root"></div>
-<script type="text/babel" data-presets="react">
+<script type="text/plain" id="app-source">
 const { useState, useEffect, useMemo, useCallback } = React;
 
 /* ----------------------------- ICONS (hand-drawn, no external icon package) ----------------------------- */
@@ -519,209 +724,6 @@ function App() {
 
   return (
     <div className="app-root">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap');
-
-        .app-root {
-          --court-deep: #0F3A2C;
-          --court-mid: #175C43;
-          --line: #F4F7F1;
-          --shuttle: #E4FF6B;
-          --smash: #FF5C4D;
-          --muted: #86A99B;
-          font-family: 'Work Sans', sans-serif;
-          background: var(--court-deep);
-          color: var(--line);
-          min-height: 100%;
-          padding: 24px 20px 60px;
-          box-sizing: border-box;
-        }
-        .app-root * { box-sizing: border-box; }
-        .app-header {
-          display: flex; align-items: center; justify-content: space-between;
-          margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
-        }
-        .app-title {
-          font-family: 'Oswald', sans-serif; font-weight: 700; letter-spacing: 0.5px;
-          font-size: 28px; text-transform: uppercase; display: flex; align-items: center; gap: 10px;
-        }
-        .app-title .accent { color: var(--shuttle); }
-        .settings-btn {
-          background: rgba(244,247,241,0.08); border: 1px solid rgba(244,247,241,0.15);
-          color: var(--line); border-radius: 10px; padding: 8px 12px; cursor: pointer;
-          display: flex; align-items: center; gap: 6px; font-family: 'Work Sans', sans-serif; font-size: 13px;
-        }
-        .settings-btn:hover { background: rgba(244,247,241,0.14); }
-
-        .tabs {
-          display: flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid rgba(244,247,241,0.12);
-          overflow-x: auto;
-        }
-        .tab-btn {
-          background: none; border: none; color: var(--muted); padding: 10px 14px;
-          font-family: 'Oswald', sans-serif; font-size: 14px; letter-spacing: 0.3px; text-transform: uppercase;
-          cursor: pointer; display: flex; align-items: center; gap: 6px; border-bottom: 2px solid transparent;
-          white-space: nowrap;
-        }
-        .tab-btn.active { color: var(--shuttle); border-bottom-color: var(--shuttle); }
-
-        .filters { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
-        .filters select {
-          background: rgba(244,247,241,0.08); border: 1px solid rgba(244,247,241,0.18); color: var(--line);
-          padding: 7px 10px; border-radius: 8px; font-family: 'Work Sans', sans-serif; font-size: 13px;
-        }
-        .filter-count { color: var(--muted); font-size: 13px; margin-left: auto; }
-
-        .day-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-        .day-tab {
-          background: rgba(244,247,241,0.06); border: 1px solid rgba(244,247,241,0.14); color: var(--muted);
-          padding: 7px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; font-family: 'Work Sans', sans-serif;
-        }
-        .day-tab.active { background: var(--shuttle); color: var(--court-deep); font-weight: 600; border-color: var(--shuttle); }
-
-        .week-nav {
-          display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          margin-bottom: 16px; background: rgba(244,247,241,0.06); border-radius: 12px; padding: 10px 14px;
-        }
-        .week-nav button { background: rgba(244,247,241,0.1); border: none; color: var(--line); border-radius: 8px; padding: 6px; cursor: pointer; }
-        .week-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
-        .week-nav-label { text-align: center; flex: 1; }
-        .week-nav-title { display: block; font-family: 'Oswald', sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: 0.3px; }
-        .week-nav-note { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-        .ex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
-        .ex-card {
-          background: rgba(244,247,241,0.05); border: 1px solid rgba(244,247,241,0.1); border-radius: 14px;
-          padding: 0; cursor: pointer; text-align: left; overflow: hidden; color: var(--line);
-          font-family: 'Work Sans', sans-serif; transition: transform 0.15s, border-color 0.15s;
-        }
-        .ex-card:hover { border-color: var(--shuttle); transform: translateY(-2px); }
-        .ex-card-demo { position: relative; background: var(--court-mid); aspect-ratio: 1.3; }
-        .ex-done-badge {
-          position: absolute; top: 8px; right: 8px; background: var(--shuttle); color: var(--court-deep);
-          border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
-        }
-        .ex-card-body { padding: 10px 12px 12px; }
-        .ex-card-cat { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
-        .ex-card-diff { margin-left: auto; }
-        .ex-card-name { font-weight: 600; font-size: 14px; line-height: 1.3; margin-bottom: 4px; }
-        .ex-card-meta { font-size: 12px; color: var(--muted); }
-        .cat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-
-        .demo-svg { width: 100%; height: 100%; display: block; }
-        .court-line { stroke: rgba(244,247,241,0.35); stroke-width: 2; }
-        .court-line-faint { stroke: rgba(244,247,241,0.12); stroke-width: 1; }
-        .fig-shadow { fill: rgba(0,0,0,0.22); }
-
-        .modal-overlay {
-          position: fixed; inset: 0; background: rgba(6,20,15,0.75); display: flex; align-items: center; justify-content: center;
-          padding: 20px; z-index: 50;
-        }
-        .modal-card {
-          background: var(--court-deep); border: 1px solid rgba(244,247,241,0.15); border-radius: 18px;
-          max-width: 420px; width: 100%; padding: 20px; position: relative; max-height: 90vh; overflow-y: auto;
-        }
-        .modal-close { position: absolute; top: 14px; right: 14px; background: rgba(244,247,241,0.1); border: none; color: var(--line); border-radius: 8px; padding: 6px; cursor: pointer; }
-        .modal-demo { background: var(--court-mid); border-radius: 12px; aspect-ratio: 1.6; margin-bottom: 14px; overflow: hidden; }
-        .modal-video { width: 100%; height: 100%; display: block; border-radius: 12px; }
-        .video-source-link { display: inline-block; font-size: 12px; color: var(--muted); text-decoration: none; margin: -6px 0 14px; }
-        .video-source-link:hover { color: var(--shuttle); }
-        .modal-cat { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-        .modal-title { font-family: 'Oswald', sans-serif; font-size: 22px; text-transform: uppercase; margin: 0 0 10px; }
-        .modal-cue { font-size: 14px; line-height: 1.5; color: rgba(244,247,241,0.85); margin-bottom: 14px; }
-        .modal-equip { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-        .chip { background: rgba(244,247,241,0.1); padding: 4px 10px; border-radius: 20px; font-size: 12px; }
-        .modal-log { border-top: 1px solid rgba(244,247,241,0.12); padding-top: 14px; }
-        .modal-log-row { display: flex; gap: 10px; margin-bottom: 14px; }
-        .modal-log-row label { flex: 1; display: flex; flex-direction: column; font-size: 11px; color: var(--muted); gap: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
-        .modal-log-row input {
-          background: rgba(244,247,241,0.08); border: 1px solid rgba(244,247,241,0.18); color: var(--line);
-          padding: 8px; border-radius: 8px; font-family: 'Work Sans', sans-serif; font-size: 14px; width: 100%;
-        }
-        .btn-complete {
-          width: 100%; background: var(--shuttle); color: var(--court-deep); border: none; border-radius: 10px;
-          padding: 12px; font-weight: 600; font-family: 'Work Sans', sans-serif; font-size: 14px; cursor: pointer;
-          display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-
-        .settings-panel {
-          background: rgba(244,247,241,0.06); border: 1px solid rgba(244,247,241,0.14); border-radius: 14px;
-          padding: 16px; margin-bottom: 20px;
-        }
-        .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .stepper { display: flex; align-items: center; gap: 10px; }
-        .stepper button { background: rgba(244,247,241,0.1); border: none; color: var(--line); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 16px; }
-        .stepper-val { font-family: 'Oswald', sans-serif; font-size: 18px; min-width: 20px; text-align: center; }
-        .reset-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid rgba(255,92,77,0.5); color: var(--smash); padding: 7px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; margin-top: 12px; }
-
-        .progress-view { }
-        .stat-row { display: flex; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
-        .stat-card { flex: 1; min-width: 110px; background: rgba(244,247,241,0.06); border: 1px solid rgba(244,247,241,0.12); border-radius: 14px; padding: 16px; text-align: center; color: var(--shuttle); }
-        .stat-num { font-family: 'Oswald', sans-serif; font-size: 30px; color: var(--line); margin: 6px 0 2px; }
-        .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
-        .cat-bars { display: flex; flex-direction: column; gap: 12px; }
-        .cat-bar-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
-        .cat-bar-label { display: flex; align-items: center; gap: 6px; width: 150px; flex-shrink: 0; }
-        .cat-bar-track { flex: 1; background: rgba(244,247,241,0.08); border-radius: 6px; height: 8px; overflow: hidden; }
-        .cat-bar-fill { height: 100%; border-radius: 6px; }
-        .cat-bar-count { width: 24px; text-align: right; color: var(--muted); }
-        .empty-state { margin-top: 24px; text-align: center; color: var(--muted); font-size: 14px; padding: 30px; border: 1px dashed rgba(244,247,241,0.2); border-radius: 14px; }
-        .loading-state { text-align: center; padding: 60px 20px; color: var(--muted); }
-
-        @keyframes splitstepLegs { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px) scaleX(1.15); } }
-        @keyframes splitstepTorso { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-        .anim-splitstep-legs { animation: splitstepLegs 0.6s ease-in-out infinite; }
-        .anim-splitstep-torso { animation: splitstepTorso 0.6s ease-in-out infinite; }
-
-        @keyframes shuffleLegs { 0% { transform: translateX(-14px); } 50% { transform: translateX(14px); } 100% { transform: translateX(-14px); } }
-        @keyframes shuffleTorso { 0% { transform: translateX(-14px); } 50% { transform: translateX(14px); } 100% { transform: translateX(-14px); } }
-        .anim-shuffle-legs { animation: shuffleLegs 1.4s ease-in-out infinite; }
-        .anim-shuffle-torso { animation: shuffleTorso 1.4s ease-in-out infinite; }
-
-        @keyframes lungeLegs { 0%,100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(10px) scaleY(0.85); } }
-        @keyframes lungeTorso { 0%,100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
-        .anim-lunge-legs { animation: lungeLegs 1.3s ease-in-out infinite; }
-        .anim-lunge-torso { animation: lungeTorso 1.3s ease-in-out infinite; }
-
-        @keyframes lungeSideLegs { 0%,100% { transform: translateX(0) scaleY(1); } 50% { transform: translateX(-16px) scaleY(0.88); } }
-        @keyframes lungeSideTorso { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-16px); } }
-        .anim-lungeside-legs { animation: lungeSideLegs 1.3s ease-in-out infinite; }
-        .anim-lungeside-torso { animation: lungeSideTorso 1.3s ease-in-out infinite; }
-
-        @keyframes swingArm { 0% { transform: rotate(60deg); } 50% { transform: rotate(-70deg); } 100% { transform: rotate(60deg); } }
-        @keyframes swingTorso { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
-        .anim-swing-arm { animation: swingArm 1.1s ease-in-out infinite; }
-        .anim-swing-torso { animation: swingTorso 1.1s ease-in-out infinite; }
-
-        @keyframes pressArmR { 0%,100% { transform: rotate(20deg); } 50% { transform: rotate(-95deg); } }
-        @keyframes pressArmL { 0%,100% { transform: rotate(-20deg) scaleX(-1); } 50% { transform: rotate(95deg) scaleX(-1); } }
-        .anim-press-arm-r { animation: pressArmR 1.2s ease-in-out infinite; }
-        .anim-press-arm-l { animation: pressArmL 1.2s ease-in-out infinite; }
-
-        @keyframes pullArmR { 0%,100% { transform: rotate(10deg) translateX(0); } 50% { transform: rotate(-25deg) translateX(-8px); } }
-        @keyframes pullArmL { 0%,100% { transform: rotate(-10deg) translateX(0) scaleX(-1); } 50% { transform: rotate(25deg) translateX(8px) scaleX(-1); } }
-        .anim-pull-arm-r { animation: pullArmR 1.2s ease-in-out infinite; }
-        .anim-pull-arm-l { animation: pullArmL 1.2s ease-in-out infinite; }
-
-        @keyframes twistTorso { 0%,100% { transform: rotate(-18deg); } 50% { transform: rotate(18deg); } }
-        .anim-twist-torso { animation: twistTorso 1s ease-in-out infinite; transform-origin: 100px 90px; }
-
-        @keyframes raiseArmR { 0%,100% { transform: rotate(70deg); } 50% { transform: rotate(-40deg); } }
-        @keyframes raiseArmL { 0%,100% { transform: rotate(-70deg) scaleX(-1); } 50% { transform: rotate(40deg) scaleX(-1); } }
-        .anim-raise-arm-r { animation: raiseArmR 1.3s ease-in-out infinite; }
-        .anim-raise-arm-l { animation: raiseArmL 1.3s ease-in-out infinite; }
-
-        @keyframes plankPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
-        .anim-plank-pulse { animation: plankPulse 1.4s ease-in-out infinite; }
-
-        @media (prefers-reduced-motion: reduce) {
-          .anim-splitstep-legs, .anim-splitstep-torso, .anim-shuffle-legs, .anim-shuffle-torso,
-          .anim-lunge-legs, .anim-lunge-torso, .anim-lungeside-legs, .anim-lungeside-torso,
-          .anim-swing-arm, .anim-swing-torso, .anim-press-arm-r, .anim-press-arm-l,
-          .anim-pull-arm-r, .anim-pull-arm-l, .anim-twist-torso, .anim-raise-arm-r,
-          .anim-raise-arm-l, .anim-plank-pulse { animation: none; }
-        }
-      `}</style>
 
       <div className="app-header">
         <div className="app-title"><Dumbbell size={26} /> Smash<span className="accent">Prep</span></div>
@@ -777,6 +779,11 @@ function App() {
 
 const rootEl = document.getElementById("root");
 ReactDOM.createRoot(rootEl).render(<App />);
+</script>
+<script>
+  var __src = document.getElementById("app-source").textContent;
+  var __out = Babel.transform(__src, { presets: [["react", { runtime: "classic" }]] }).code;
+  (0, eval)(__out);
 </script>
 </body>
 </html>
